@@ -1,40 +1,11 @@
-local function check_hit(pos1, pos2, obj)
-	local ray = minetest.raycast(pos1, pos2, true, false)
-	local hit = ray:next()
-
-	-- Skip over non-normal nodes like ladders, water, doors, glass, leaves, etc
-	-- Also skip over all objects that aren't the target
-	-- Any collisions within a 1 node distance from the target don't stop the grenade
-	while hit and (
-		(
-		 hit.type == "node"
-		 and
-		 (
-			hit.intersection_point:distance(pos2) <= 1
-			or
-			not minetest.registered_nodes[minetest.get_node(hit.under).name].walkable
-		 )
-		)
-		or
-		(
-		 hit.type == "object" and hit.ref ~= obj
-		)
-	) do
-		hit = ray:next()
-	end
-
-	if hit and hit.type == "object" and hit.ref == obj then
-		return true
-	end
-end
-
 local S = minetest.get_translator(minetest.get_current_modname())
 
 local fragdef_small = table.copy(minetest.registered_craftitems["ctf_grenades:frag"].grenade)
 fragdef_small.description = S("Firecracker (Hurts anyone near blast)")
 fragdef_small.image = "ctf_mode_nade_fight_firecracker_grenade.png"
 fragdef_small.explode_radius = 4
-fragdef_small.explode_damage = 160
+fragdef_small.damage_max = 160
+fragdef_small.damage_min = 80
 fragdef_small.clock = 1.7
 
 local old_explode = fragdef_small.on_explode
@@ -146,16 +117,12 @@ grenades.register_grenade("ctf_mode_nade_fight:black_hole_grenade", {
 				local headpos = vector.offset(v:get_pos(), 0, v:get_properties().eye_height, 0)
 				local footdist = vector.distance(pos, footpos)
 				local headdist = vector.distance(pos, headpos)
-				local target_head = false
 
-				if footdist >= headdist then
-					target_head = true
-				end
+				-- Check the closest distance first, then the farther one
+				local target_head = footdist >= headdist
 
-				local hit_pos1 = check_hit(pos, target_head and headpos or footpos, v)
-
-				-- Check the closest distance, but if that fails try targeting the farther one
-				if hit_pos1 or check_hit(pos, target_head and footpos or headpos, v) then
+				if ctf_grenades.check_hit(pos, target_head and headpos or footpos, v, black_hole_radius)
+				or ctf_grenades.check_hit(pos, target_head and footpos or headpos, v, black_hole_radius) then
 					if player then
 						v:punch(player, 1, {
 							punch_interval = 1,

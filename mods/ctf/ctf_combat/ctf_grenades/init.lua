@@ -1,5 +1,69 @@
 local S = minetest.get_translator(minetest.get_current_modname())
 
+ctf_grenades = {}
+
+-- Amount of distance at which damage can reach a player through solid nodes
+local PENETRATION_DIST = 1.2
+
+-- Linear damage falloff: damage_max at dist 0, damage_min at explode_radius.
+local function calc_damage(def, dist)
+	local radius = def.explode_radius
+	local dmax = def.damage_max
+	local dmin = def.damage_min
+
+	dmin = math.max(dmin, 0)
+	if dist >= radius then return dmin end
+
+	if dist <= 0 then return dmax end
+
+	return math.max(dmin, dmax - (dmax - dmin) * (dist / radius))
+end
+
+function ctf_grenades.check_hit(pos1, pos2, obj, radius)
+	local dist = pos1:distance(pos2)
+
+	-- Out of range
+	if dist > radius then
+		return false
+	end
+
+	-- Any cover between blast and victim sits inside the penetration shell,
+	-- so nothing can block it.
+	if dist <= PENETRATION_DIST then
+		return true
+	end
+
+	local ray = minetest.raycast(pos1, pos2, true, false)
+	local hit = ray:next()
+
+	-- Skip collisions until we've gone past PENETRATION_DIST
+	-- Skip object collisions
+	local first_hitpos = false
+	while hit do
+		if hit.type == "node" then
+			local ndef = minetest.registered_nodes[minetest.get_node(hit.under).name]
+
+			if ndef and ndef.walkable then
+				if not first_hitpos then
+					first_hitpos = hit.intersection_point
+				elseif first_hitpos:distance(hit.intersection_point) > PENETRATION_DIST then
+					return false
+				end
+			end
+		elseif hit.type == "object" and hit.ref == obj then
+			if not first_hitpos or first_hitpos:distance(hit.intersection_point) <= PENETRATION_DIST then
+				return true
+			else
+				return false
+			end
+		end
+
+		hit = ray:next()
+	end
+
+	return false
+end
+
 local function remove_flora(pos, radius)
 	local pos1 = vector.subtract(pos, radius)
 	local pos2 = vector.add(pos, radius)
@@ -13,41 +77,12 @@ local function remove_flora(pos, radius)
 	end
 end
 
-local function check_hit(pos1, pos2, obj)
-	local ray = minetest.raycast(pos1, pos2, true, false)
-	local hit = ray:next()
-
-	-- Skip over non-normal nodes like ladders, water, doors, glass, leaves, etc
-	-- Also skip over all objects that aren't the target
-	-- Any collisions within a 1 node distance from the target don't stop the grenade
-	while hit and (
-		(
-		 hit.type == "node"
-		 and
-		 (
-			hit.intersection_point:distance(pos2) <= 1
-			or
-			not minetest.registered_nodes[minetest.get_node(hit.under).name].walkable
-		 )
-		)
-		or
-		(
-		 hit.type == "object" and hit.ref ~= obj
-		)
-	) do
-		hit = ray:next()
-	end
-
-	if hit and hit.type == "object" and hit.ref == obj then
-		return true
-	end
-end
-
 local fragdef = {
 	description = S("Frag grenade (Kills anyone near blast)"),
 	image = "grenades_frag.png",
-	explode_radius = 10,
-	explode_damage = 200,
+	explode_radius = 7.8,
+	damage_max = 260,
+	damage_min = 0,
 	on_collide = function()
 		return true
 	end,
@@ -106,21 +141,24 @@ local fragdef = {
 				local headpos = vector.offset(v:get_pos(), 0, v:get_properties().eye_height, 0)
 				local footdist = vector.distance(pos, footpos)
 				local headdist = vector.distance(pos, headpos)
-				local target_head = false
 
-				if footdist >= headdist then
-					target_head = true
+				-- Check the closest distance first, then the farther one.
+				-- Damage uses the distance of the ray that actually succeeded.
+				local target_head = footdist >= headdist
+
+				local hit_dist
+				if ctf_grenades.check_hit(pos, target_head and headpos or footpos, v, radius) then
+					hit_dist = target_head and headdist or footdist
+				elseif ctf_grenades.check_hit(pos, target_head and footpos or headpos, v, radius) then
+					hit_dist = target_head and footdist or headdist
 				end
 
-				local hit_pos1 = check_hit(pos, target_head and headpos or footpos, v)
-
-				-- Check the closest distance, but if that fails try targeting the farther one
-				if hit_pos1 or check_hit(pos, target_head and footpos or headpos, v) then
+				if hit_dist then
 					v:punch(player, 1, {
 						punch_interval = 1,
 						damage_groups = {
 							grenade = 1,
-							fleshy = def.explode_damage - ( (radius/30) * (target_head and headdist or footdist) )
+							fleshy = calc_damage(def, hit_dist)
 						}
 					}, nil)
 				end

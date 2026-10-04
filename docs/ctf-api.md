@@ -129,6 +129,12 @@ grenades.register_grenade("name", { -- Name of the grenade (Like 'smoke' or 'fla
 	image = "", -- The name of the grenade's texture
 	collide_with_objects = false, -- (Default: false) Controls whether the grenade collides with objects. Grenade will never collide with thrower regardless of this setting
 	throw_cooldown = 0, -- How often player can throw grenades, in seconds
+
+	-- required, used by ctf_grenades
+	explode_radius = 10, -- Blast radius in nodes (interpreted by the grenade's own on_explode, e.g. ctf_grenades frag)
+	damage_max = 260, -- Damage at the center of the blast (dist 0)
+	damage_min = 0, -- Damage at the edge of the blast (dist == explode_radius). Damage falls off linearly between the two.
+
 	on_explode = function(def, obj, pos, name)
 		-- This function is called when the grenade 'explodes'
 		-- <def> grenade object definition
@@ -280,7 +286,9 @@ This mod overrides the build in chat commands, and introduces a few new chat com
 
 ## ctf_combat
 This modpack consists of multiple mods.
+
 ### ctf_combat_mode
+
 #### `ctf_combat_mode.add_hitter(player, hitter, weapon_image, time)`
 * `player` *PlayerObj*: Player who was killed.
 * `hitter` *PlayerObj*: Player killed the `player`
@@ -360,6 +368,13 @@ This modpack consists of multiple mods.
 
 #### `ctf_ranged.hide_scope(name)`
 * `name` *string*: Player name
+
+### ctf_grenades
+
+#### `ctf_grenades.check_hit(pos1, pos2, obj, radius)`
+Check if a blast at pos1 will reach pos2. Returns true or false.
+* Skips non-walkable nodes, skips objects.
+* Penetrates up to `1.2` nodes (See code for actual dist) from the first collision with a walkable node
 
 ## ctf_core
 #### `ctf_core.init_cooldowns()`

@@ -28,7 +28,7 @@ function ctf_core.init_cooldowns()
 				end
 			end)
 
-			time.start_time = os.clock()
+			time.start_time = minetest.get_us_time() / 1e6
 
 			self.players[pname] = time
 		end,

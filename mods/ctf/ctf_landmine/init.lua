@@ -1,12 +1,12 @@
 local landmines = {
 	-- core.hash_node_position(vector.round(pos)) -> landmine table
-	-- like landmines[core.hash_node_position(vector.round(pos))] = {s = os.clock(), p = pname, t = pteam, a = area_id}
+	-- landmines[hash] = {s = place time (us), p = pname, t = pteam, a = area_id}
 }
 
 local landmine_areas
 
 local number_of_landmines = 0
-local ARMING_TIME = 3
+local ARMING_TIME = 3 * 1e6 -- 3 seconds
 local MAX_EXPLOSIONS_PER_STEP = 2
 
 local S = minetest.get_translator(minetest.get_current_modname())
@@ -16,7 +16,7 @@ local add_landmine = function(pos, pname, pteam)
 
 	local hash = core.hash_node_position(pos)
 	landmines[hash] = {
-		s = os.clock(),
+		s = minetest.get_us_time(),
 		p = pname,
 		t = pteam,
 		a = landmine_areas:insert_area(
@@ -133,7 +133,7 @@ local function landmine_explode(pos)
 end
 
 core.register_node("ctf_landmine:landmine", {
-	description = S("Landmine (@1s arming time)", ARMING_TIME),
+	description = S("Landmine (@1s arming time)", ARMING_TIME / 1e6),
 	drawtype = "nodebox",
 	tiles = {
 		"ctf_landmine_landmine.png",
@@ -187,7 +187,7 @@ core.register_globalstep(function(dtime)
 	end
 	landmine_globalstep_counter = 0.0
 
-	local current = os.clock()
+	local current = minetest.get_us_time()
 	local got = 0
 	for _idx, player in ipairs(core.get_connected_players()) do
 		local pos = player:get_pos()

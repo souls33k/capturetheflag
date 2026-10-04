@@ -27,7 +27,7 @@ minetest.register_privilege("canafk", {
 	on_revoke = function(name)
 		if not players[name] then
 			players[name] = {
-				lastAction = os.clock(),
+				lastAction = minetest.get_us_time() / 1e6,
 				lastPos = minetest.get_player_by_name(name):get_pos(),
 			}
 		end
@@ -38,7 +38,7 @@ minetest.register_on_joinplayer(function(player)
 	if not minetest.check_player_privs(player, { canafk = true }) then
 		local playerName = player:get_player_name()
 		players[playerName] = {
-			lastAction = os.clock(),
+			lastAction = minetest.get_us_time() / 1e6,
 			lastPos = player:get_pos(),
 		}
 	end
@@ -55,7 +55,7 @@ minetest.register_on_chat_message(function(playerName, message)
 		return
 	end
 
-	players[playerName]["lastAction"] = os.clock()
+	players[playerName]["lastAction"] = minetest.get_us_time() / 1e6
 end)
 
 minetest.register_globalstep(function(dtime)
@@ -69,7 +69,7 @@ minetest.register_globalstep(function(dtime)
 	end
 	checkTimer = 0
 
-	local currGameTime = os.clock()
+	local currGameTime = minetest.get_us_time() / 1e6
 
 	--Loop through each player in players
 	for playerName,_ in pairs(players) do
@@ -83,7 +83,7 @@ minetest.register_globalstep(function(dtime)
 							S("Movement detected, the AFK kick timer has been reset")))
 				end
 
-				players[playerName]["lastAction"] = os.clock()
+				players[playerName]["lastAction"] = minetest.get_us_time() / 1e6
 				players[playerName]["lastPos"] = pos
 			end
 

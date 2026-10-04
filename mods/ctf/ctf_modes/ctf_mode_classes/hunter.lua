@@ -5,7 +5,8 @@ local hunting = {
 	--[[
 	hunter = {
 		hunting = playername,
-		start_time = os.clock(),
+		start_time = core.get_us_time() / 1e6,
+		warned = false,
 	}
 	--]]
 }
@@ -109,7 +110,8 @@ core.register_craftitem("ctf_mode_classes:hunter_token", {
 				if dist_from_flag(p) > MIN_DIST_FROM_FLAG then
 					table.insert(targets, {
 						hunting = p:get_player_name(),
-						start_time = os.clock()
+						start_time = core.get_us_time() / 1e6,
+						warned = false,
 					})
 				else
 					reason = "The only enemies nearby are at their flag"
@@ -184,7 +186,7 @@ core.register_globalstep(function(dtime)
 				text = "Your target got too close to their flag",
 				color = "warning",
 			})
-		elseif os.clock() - hunt.start_time > HUNT_TIME then
+		elseif core.get_us_time() / 1e6 - hunt.start_time > HUNT_TIME then
 			stop_hunt(hunter)
 			hud_events.new(hunter, {
 				quick = true,
@@ -192,7 +194,8 @@ core.register_globalstep(function(dtime)
 				color = "warning",
 			})
 		else
-			if os.clock() - hunt.start_time == HUNT_TIME-10 then
+			if not hunt.warned and core.get_us_time() / 1e6 - hunt.start_time >= HUNT_TIME - 10 then
+				hunt.warned = true
 				hud_events.new(hunter, {
 					text = "Your hunt ends in 10 seconds",
 					channel = 2,

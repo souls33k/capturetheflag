@@ -45,7 +45,7 @@ end
 return {
 	get_last_updated = function()
 		if ranking_timer then
-			return os.clock() - ranking_timer
+			return core.get_us_time() / 1e6 - ranking_timer
 		else
 			return 0
 		end
@@ -92,8 +92,8 @@ return {
 			rankings:add(player, amounts)
 		elseif ctf_core.settings.buffer_ranking_writes > 0 then
 			if not ranking_timer then
-				ranking_timer = os.clock()
-			elseif os.clock() - ranking_timer >= ctf_core.settings.buffer_ranking_writes then
+				ranking_timer = core.get_us_time() / 1e6
+			elseif core.get_us_time() / 1e6 - ranking_timer >= ctf_core.settings.buffer_ranking_writes then
 				write_rankings()
 			end
 		end

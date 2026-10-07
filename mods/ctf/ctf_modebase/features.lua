@@ -1,4 +1,4 @@
-features.lualocal mapload_huds = mhud.init()
+local mapload_huds = mhud.init()
 local LOADING_SCREEN_TARGET_TIME = 5
 local loading_screen_time
 

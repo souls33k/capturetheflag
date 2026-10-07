@@ -1,4 +1,4 @@
-local mapload_huds = mhud.init()
+features.lualocal mapload_huds = mhud.init()
 local LOADING_SCREEN_TARGET_TIME = 5
 local loading_screen_time
 
@@ -225,6 +225,7 @@ local damage_group_textures = {
 	black_hole_grenade = "ctf_mode_nade_fight_black_hole_grenade.png",
 	damage_cobble = "ctf_map_damage_cobble.png",
 	landmine = "ctf_landmine_landmine.png",
+	trapchest = "ctf_kill_list_trapchest.png" ,
 }
 
 local function get_weapon_image(hitter, tool_capabilities)

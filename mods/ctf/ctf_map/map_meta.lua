@@ -100,6 +100,7 @@ function ctf_map.load_map_meta(idx, dirname)
 			phys_jump     = tonumber(meta:get("phys_jump")),
 			phys_gravity  = tonumber(meta:get("phys_gravity")),
 			chests        = {},
+			trap_chests   = {},
 			teams         = {},
 			barrier_area  = {pos1 = pos1, pos2 = pos2},
 		}
@@ -148,6 +149,25 @@ function ctf_map.load_map_meta(idx, dirname)
 				amount = ctf_map.DEFAULT_CHEST_AMOUNT,
 			}
 		end
+		-- Read custom trap chest zones from config
+		i = 1
+		minetest.log("verbose", "Parsing trap chest zones of " .. map.name .. "...")
+		while meta:get("trap_chests." .. i .. ".from") do
+			local from = minetest.string_to_pos(meta:get("trap_chests." .. i .. ".from"))
+			local to = minetest.string_to_pos(meta:get("trap_chests." .. i .. ".to"))
+			assert(from and to, "Positions needed for trap chest zone " ..
+					i .. " in map " .. map.name)
+
+			from, to = vector.sort(from, to)
+
+			map.trap_chests[i] = {
+				pos1 = vector.add(offset, vector.add(from, offset_to_new)),
+				pos2 = vector.add(offset, vector.add(to, offset_to_new)),
+				amount = tonumber(meta:get("trap_chests." .. i .. ".n") or "1"),
+			}
+
+			i = i + 1
+		end
 	else
 		-- If new items are added also remember to change the table in mapedit_gui.lua
 		-- The version number should be updated if you change an item
@@ -177,6 +197,7 @@ function ctf_map.load_map_meta(idx, dirname)
 			phys_jump      = tonumber(meta:get("phys_jump")),
 			phys_gravity   = tonumber(meta:get("phys_gravity")),
 			chests         = minetest.deserialize(meta:get("chests")),
+			trap_chests    = minetest.deserialize(meta:get("trap_chests"))
 			teams          = minetest.deserialize(meta:get("teams")),
 			barrier_area   = minetest.deserialize(meta:get("barrier_area")),
 			game_modes     = minetest.deserialize(meta:get("game_modes")),
@@ -186,6 +207,11 @@ function ctf_map.load_map_meta(idx, dirname)
 		for id, def in pairs(map.chests) do
 			map.chests[id].pos1 = vector.add(offset, def.pos1)
 			map.chests[id].pos2 = vector.add(offset, def.pos2)
+		end
+		
+		for id, def in pairs(map.trap_chests) do
+			map.trap_chests[id].pos1 = vector.add(offset, def.pos1)
+			map.trap_chests[id].pos2 = vector.add(offset, def.pos2)
 		end
 
 		for id, def in pairs(map.teams) do
@@ -275,6 +301,13 @@ function ctf_map.save_map(mapmeta)
 		mapmeta.chests[id].pos2 = vector.subtract(def.pos2, mapmeta.offset)
 	end
 
+	for id, def in pairs(mapmeta.trap_chests) do
+	    def.pos1, def.pos2 = vector.sort(def.pos1, def.pos2)
+
+	    mapmeta.trap_chests[id].pos1 = vector.subtract(def.pos1, mapmeta.offset)
+	    mapmeta.trap_chests[id].pos2 = vector.subtract(def.pos2, mapmeta.offset)
+    end
+
 	for id, def in pairs(mapmeta.teams) do
 		-- Remove team from the list if not enabled
 		if not def.enabled then
@@ -321,6 +354,7 @@ function ctf_map.save_map(mapmeta)
 	meta:set("phys_jump"     , mapmeta.phys_jump)
 	meta:set("phys_gravity"  , mapmeta.phys_gravity)
 	meta:set("chests"        , minetest.serialize(mapmeta.chests))
+	meta:set("trap_chests"   , minetest.serialize(mapmeta.trap_chests))
 	meta:set("teams"         , minetest.serialize(mapmeta.teams))
 	meta:set("barrier_area"  , minetest.serialize(barrier_area))
 	meta:set("game_modes"    , minetest.serialize(mapmeta.game_modes))

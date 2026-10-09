@@ -145,6 +145,7 @@ minetest.register_tool("ctf_mode_classes:support_paxel", {
 				minetest.item_place(itemstack, user, pointed_thing)
 			end
 		end
+		return itemstack
 	end,
 })
 

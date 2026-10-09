@@ -497,7 +497,7 @@ local function can_punchplayer(player, hitter)
 	local pname, hname = player:get_player_name(), hitter:get_player_name()
 	local pteam, hteam = ctf_teams.get(player), ctf_teams.get(hitter)
 
-	if not ctf_modebase.remove_respawn_immunity(hname) then
+	if not ctf_modebase.remove_respawn_immunity(hitter) then
 		return false, S("You can't attack while immune")
 	end
 
@@ -718,7 +718,7 @@ return {
 		local pteam = ctf_teams.get(player)
 		local tcolor = ctf_teams.team[pteam].color
 
-		ctf_modebase.remove_immunity(pname)
+		ctf_modebase.remove_immunity(player)
 		playertag.set(player, playertag.TYPE_BUILTIN, tcolor)
 
 		local text = " has taken the flag"

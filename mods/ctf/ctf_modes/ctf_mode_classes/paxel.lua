@@ -113,7 +113,12 @@ minetest.register_tool("ctf_mode_classes:support_paxel", {
 	sound = {breaks = "default_tool_breaks"},
 
 	on_place = function(itemstack, user, pointed_thing)
-		if pointed_thing and ctf_mode_classes.paxel_is_ready(itemstack) then
+    -- Allow right-clicking nodes while the Paxel is recharging.
+    if pointed_thing and not ctf_mode_classes.paxel_is_ready(itemstack) then
+        return minetest.item_place(itemstack, user, pointed_thing)
+    end
+
+    if pointed_thing and ctf_mode_classes.paxel_is_ready(itemstack) then
 			local pos = pointed_thing.under
 			if is_diggable(minetest.get_node(pos)) then
 				if not ctf_modebase.match_started then

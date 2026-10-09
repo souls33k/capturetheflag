@@ -159,11 +159,7 @@ local trap_def = {
 			end
 
 			-- Enemies can disarm the trap with a ready Support Paxel.
-			if is_support_paxel(itemstack) then
-				if not paxel_is_ready(itemstack) then
-					return itemstack
-				end
-
+			if is_support_paxel(itemstack) and paxel_is_ready(itemstack) then
 				disarm_trapchest(pos, clicker)
 				start_paxel_cooldown(clicker, itemstack)
 				return itemstack
@@ -171,11 +167,7 @@ local trap_def = {
 		else
 			-- Map-generated traps have no owner or team.
 			-- Any player with a ready Support Paxel can disarm them.
-			if is_support_paxel(itemstack) then
-				if not paxel_is_ready(itemstack) then
-					return itemstack
-				end
-
+			if is_support_paxel(itemstack) and paxel_is_ready(itemstack) then
 				disarm_trapchest(pos, clicker)
 				start_paxel_cooldown(clicker, itemstack)
 				return itemstack

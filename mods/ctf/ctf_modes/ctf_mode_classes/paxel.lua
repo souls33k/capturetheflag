@@ -11,6 +11,30 @@ local PAXEL_COOLDOWN_TIME = 20
 
 local dig_timers = {}
 
+ctf_mode_classes = ctf_mode_classes or {}
+
+function ctf_mode_classes.paxel_is_ready(itemstack)
+	return itemstack:get_name() == "ctf_mode_classes:support_paxel"
+		and itemstack:get_wear() == 0
+end
+
+function ctf_mode_classes.start_paxel_cooldown(player, itemstack)
+	if not ctf_mode_classes.paxel_is_ready(itemstack) then
+		return false
+	end
+
+	local pname = player:get_player_name()
+	local dstep = math.floor(65534 / PAXEL_COOLDOWN_TIME)
+
+	ctf_modebase.update_wear.start_update(
+		pname, "ctf_mode_classes:support_paxel", dstep, true
+	)
+
+	itemstack:set_wear(65534)
+
+	return true
+end
+
 local function is_diggable(node)
 	local name = node.name
 	return name:find("default:") and (
@@ -87,7 +111,7 @@ minetest.register_tool("ctf_mode_classes:support_paxel", {
 	sound = {breaks = "default_tool_breaks"},
 
 	on_place = function(itemstack, user, pointed_thing)
-		if pointed_thing and itemstack:get_wear() == 0 then
+		if pointed_thing and ctf_mode_classes.paxel_is_ready(itemstack) then
 			local pos = pointed_thing.under
 			if is_diggable(minetest.get_node(pos)) then
 				if not ctf_modebase.match_started then
@@ -107,12 +131,8 @@ minetest.register_tool("ctf_mode_classes:support_paxel", {
 					dig_timers[pname]:cancel()
 				end
 
-				dig_timers[pname] = minetest.after(DIG_SPEED, dig, pname, pos, PAXEL_POWER, PAXEL_RETRY)
-
-				local dstep = math.floor(65534 / PAXEL_COOLDOWN_TIME)
-				ctf_modebase.update_wear.start_update(pname, "ctf_mode_classes:support_paxel", dstep, true)
-
-				itemstack:set_wear(65534)
+	            dig_timers[pname] = minetest.after(DIG_SPEED, dig, pname, pos, PAXEL_POWER, PAXEL_RETRY)
+				ctf_mode_classes.start_paxel_cooldown(user, itemstack)
 				return itemstack
 			else
 				minetest.item_place(itemstack, user, pointed_thing)

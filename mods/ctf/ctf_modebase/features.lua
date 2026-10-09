@@ -225,7 +225,6 @@ local damage_group_textures = {
 	black_hole_grenade = "ctf_mode_nade_fight_black_hole_grenade.png",
 	damage_cobble = "ctf_map_damage_cobble.png",
 	landmine = "ctf_landmine_landmine.png",
-	trapchest = "ctf_kill_list_trapchest.png" ,
 }
 
 local function get_weapon_image(hitter, tool_capabilities)
@@ -428,7 +427,13 @@ local function end_combat_mode(player, reason, killer, weapon_image)
 					ctf_kill_list.add(player, player, weapon_image)
 					send_death_message(player, killer, weapon_image)
 				else
-					ctf_kill_list.add("", player, get_suicide_image(reason))
+					if not (
+						reason
+						and reason.type == "set_hp"
+						and reason.reason == "ctf_trapchest"
+					) then
+						ctf_kill_list.add("", player, get_suicide_image(reason))
+					end
 					send_death_message(player, player, get_suicide_image(reason))
 				end
 
@@ -437,7 +442,7 @@ local function end_combat_mode(player, reason, killer, weapon_image)
 			end
 			recent_rankings.add(player, {deaths = 1}, true)
 		end
-
+			
 		if killer then
 			local killscore = calculate_killscore(player)
 			local total_enemy_reward = 0

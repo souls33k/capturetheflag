@@ -1,8 +1,6 @@
-local pending_kills = {}
 local trapchest = {}
 
 local TRAP_DAMAGE = 150
-local TRAP_KILL_IMAGE = "ctf_kill_list_trapchest.png"
 
 local function is_support_paxel(stack)
 	return stack:get_name() == "ctf_mode_classes:support_paxel"

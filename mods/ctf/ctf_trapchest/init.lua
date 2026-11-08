@@ -92,12 +92,14 @@ local function play_trapchest_explosion(pos)
 end
 
 local function damage_trap_opener(player, trap)
-	local pname = player:get_player_name()
+	local hp_before = player:get_hp()
 
-	pending_kills[pname] = {
+	player:set_hp(hp_before - TRAP_DAMAGE, {
+		type = "set_hp",
+		reason = "ctf_trapchest",
 		trap_player = trap and trap.player or nil,
-	}
-
+	})
+end
 	local hp_before = player:get_hp()
 
 	player:set_hp(hp_before - TRAP_DAMAGE, {
@@ -111,10 +113,6 @@ local function damage_trap_opener(player, trap)
 		pending_kills[pname] = nil
 	end
 end
-
-minetest.register_on_leaveplayer(function(player)
-	pending_kills[player:get_player_name()] = nil
-end)
 
 local trap_def = {
 	description = "Trap Chest",
@@ -209,7 +207,6 @@ minetest.register_node("ctf_trapchest:trapchest", trap_def)
 
 if ctf_api and ctf_api.register_on_match_end then
 	ctf_api.register_on_match_end(function()
-		pending_kills = {}
 		trapchest = {}
 	end)
 end

@@ -423,19 +423,21 @@ local function end_combat_mode(player, reason, killer, weapon_image)
 			end
 		else
 			if reason
-        			and reason.type == "set_hp"
-        			and reason.reason == "ctf_trapchest" then
-    			-- Trapchest deaths credit the trap placer.
-    			killer = reason.trap_player
-    			weapon_image = "ctf_kill_list_trapchest.png"
+				and reason.type == "set_hp"
+				and reason.reason == "ctf_trapchest" then
+				-- Trapchest deaths credit the trap placer.
+				killer = reason.trap_player
+				weapon_image = "ctf_kill_list_trapchest.png"
 
-    			-- Map-generated traps follow the normal suicide-after-hit mechanic.
-   				 if not killer then
-        			ctf_kill_list.add("", player, weapon_image)
-						
+				-- Map-generated traps follow the normal suicide-after-hit mechanic.
+				if not killer then
+					ctf_kill_list.add("", player, weapon_image)
+
 					killer, weapon_image = ctf_combat_mode.get_last_hitter(player)
 					comment = " (Suicide)"
-    			end
+				end
+
+			elseif reason ~= "punch" or killer == player then
 
             elseif reason ~= "punch" or killer == player then
 				if reason == "punch" then

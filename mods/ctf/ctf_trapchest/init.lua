@@ -41,13 +41,13 @@ local function remove_trapchest(pos)
 end
 
 local function disarm_trapchest(pos, player)
-    remove_trapchest(pos)
+	remove_trapchest(pos)
 
-    hud_events.new(player, {
-        quick = true,
-        text = "Trap chest disarmed.",
-        color = "success",
-    })
+	hud_events.new(player, {
+		quick = true,
+		text = "Trap chest disarmed.",
+		color = "success",
+	})
 end
 
 local function play_trapchest_explosion(pos)
@@ -92,26 +92,11 @@ local function play_trapchest_explosion(pos)
 end
 
 local function damage_trap_opener(player, trap)
-	local hp_before = player:get_hp()
-
-	player:set_hp(hp_before - TRAP_DAMAGE, {
-		type = "set_hp",
-		reason = "ctf_trapchest",
-		trap_player = trap and trap.player or nil,
-	})
-end
-	local hp_before = player:get_hp()
-
-	player:set_hp(hp_before - TRAP_DAMAGE, {
-	type = "set_hp",
-	reason = "ctf_trapchest",
-	trap_player = trap and trap.player or nil,
-})
-
-	-- If the player survived, this trap did not kill them.
-	if player:get_hp() > 0 then
-		pending_kills[pname] = nil
-	end
+    player:set_hp(player:get_hp() - TRAP_DAMAGE, {
+        type = "set_hp",
+        reason = "ctf_trapchest",
+        trap_player = trap and trap.player or nil,
+    })
 end
 
 local trap_def = {

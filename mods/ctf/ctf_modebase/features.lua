@@ -437,8 +437,6 @@ local function end_combat_mode(player, reason, killer, weapon_image)
 					comment = " (Suicide)"
 				end
 
-			elseif reason ~= "punch" or killer == player then
-
             elseif reason ~= "punch" or killer == player then
 				if reason == "punch" then
 					ctf_kill_list.add(player, player, weapon_image)

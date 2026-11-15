@@ -190,7 +190,7 @@ local trap_def = {
 
 		if trap and trap.player then
 			local placer = minetest.get_player_by_name(trap.player)
-			
+
 			if placer then
 				no_kill = ctf_teams.get(placer) == ctf_teams.get(clicker)
 			end

@@ -431,9 +431,9 @@ local function end_combat_mode(player, reason, killer, weapon_image)
 					killer = nil
 					elseif reason.trap_player then
 					-- Player-placed enemy trap: credit the placer.
-    				killer = reason.trap_player
+					killer = reason.trap_player
 				else
-    				-- Map-generated traps follow the normal suicide-after-hit mechanic.
+					-- Map-generated traps follow the normal suicide-after-hit mechanic.
 					ctf_kill_list.add("", player, weapon_image)
 
 					killer, weapon_image = ctf_combat_mode.get_last_hitter(player)

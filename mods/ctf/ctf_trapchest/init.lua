@@ -91,16 +91,23 @@ local function play_trapchest_explosion(pos)
 	})
 end
 
-local function damage_trap_opener(player, trap)
+local function damage_trap_opener(player, trap, no_kill)
     player:set_hp(player:get_hp() - TRAP_DAMAGE, {
         type = "set_hp",
         reason = "ctf_trapchest",
         trap_player = trap and trap.player or nil,
+        no_kill = no_kill,
     })
 end
 
 local trap_def = {
 	description = "Trap Chest",
+	light_source = 2,
+
+	on_construct = function(pos)
+		local meta = minetest.get_meta(pos)
+		meta:set_string("infotext", "Treasure Chest")
+	end,
 
 	-- Closed-chest texture layout.
 	tiles = {
@@ -179,9 +186,19 @@ local trap_def = {
 			end
 		end
 		-- Anyone opening an armed trap without a usable Paxel triggers it.
+		local no_kill = false
+
+		if trap and trap.player then
+    		local placer = minetest.get_player_by_name(trap.player)
+
+    		if placer then
+        		no_kill = ctf_teams.get(placer) == ctf_teams.get(clicker)
+    		end
+		end
+
 		remove_trapchest(pos)
 		play_trapchest_explosion(pos)
-		damage_trap_opener(clicker, trap)
+		damage_trap_opener(clicker, trap, no_kill)
 
 		return itemstack
 	end,

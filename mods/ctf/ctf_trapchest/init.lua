@@ -100,7 +100,6 @@ local function damage_trap_opener(player, trap)
         type = "set_hp",
         reason = "ctf_trapchest",
         trap_player = trap and trap.player or nil,
-        no_kill = no_kill,
     })
 end
 

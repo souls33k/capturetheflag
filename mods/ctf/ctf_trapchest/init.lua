@@ -138,7 +138,6 @@ local trap_def = {
 		register_trapchest(pos, placer)
 	end,
 
-	
 on_rightclick = function(pos, node, clicker, itemstack)
     if not clicker or not clicker:is_player() then
         return itemstack

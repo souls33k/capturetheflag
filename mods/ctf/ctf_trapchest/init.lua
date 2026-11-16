@@ -27,12 +27,16 @@ local function get_trapchest(pos)
 end
 
 local function register_trapchest(pos, placer)
-	local team = ctf_teams.get(placer)
+    if not placer or not placer:is_player() then
+        return
+    end
 
-	trapchest[minetest.hash_node_position(pos)] = {
-		player = placer:get_player_name(),
-		team = team,
-	}
+    local team = ctf_teams.get(placer)
+
+    trapchest[minetest.hash_node_position(pos)] = {
+        player = placer:get_player_name(),
+        team = team,
+    }
 end
 
 local function remove_trapchest(pos)

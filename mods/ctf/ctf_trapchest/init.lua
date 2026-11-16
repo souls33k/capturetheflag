@@ -95,7 +95,7 @@ local function play_trapchest_explosion(pos)
 	})
 end
 
-local function damage_trap_opener(player, trap, no_kill)
+local function damage_trap_opener(player, trap)
     player:set_hp(player:get_hp() - TRAP_DAMAGE, {
         type = "set_hp",
         reason = "ctf_trapchest",
@@ -202,7 +202,7 @@ on_rightclick = function(pos, node, clicker, itemstack)
     -- Anyone opening an armed trap without a usable Paxel triggers it.
     remove_trapchest(pos)
     play_trapchest_explosion(pos)
-    damage_trap_opener(clicker, active_trap, false)
+    damage_trap_opener(clicker, active_trap)
 
     return itemstack
 end,

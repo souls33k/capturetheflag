@@ -145,7 +145,6 @@ on_rightclick = function(pos, node, clicker, itemstack)
 
     local trap = get_trapchest(pos)
 
-    -- Decide whether this chest is still an active player-placed trap.
     -- If the placer is offline or has changed teams, treat it as map-generated.
     local active_trap = trap
 

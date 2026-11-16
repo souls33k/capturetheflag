@@ -138,74 +138,77 @@ local trap_def = {
 		register_trapchest(pos, placer)
 	end,
 
-	on_rightclick = function(pos, node, clicker, itemstack)
-		if not clicker or not clicker:is_player() then
-			return itemstack
-		end
+	
+on_rightclick = function(pos, node, clicker, itemstack)
+    if not clicker or not clicker:is_player() then
+        return itemstack
+    end
 
-		local trap = get_trapchest(pos)
+    local trap = get_trapchest(pos)
 
-		-- Player-placed trap chest.
-		if trap and trap.team then
-			local opener_team = ctf_teams.get(clicker)
+    -- Decide whether this chest is still an active player-placed trap.
+    -- If the placer is offline or has changed teams, treat it as map-generated.
+    local active_trap = trap
 
-			-- Teammates cannot trigger the trap.
-			if opener_team == trap.team then
-				if is_support_paxel(itemstack) then
-					-- A recharging Paxel cannot retrieve the chest.
-					if not paxel_is_ready(itemstack) then
-						return itemstack
-					end
+    if trap and trap.player and trap.team then
+        local placer = minetest.get_player_by_name(trap.player)
 
-					-- Retrieve the chest as an item.
-					remove_trapchest(pos)
-					minetest.add_item(pos, "ctf_trapchest:trapchest")
+        if not placer or ctf_teams.get(placer) ~= trap.team then
+            active_trap = nil
+        end
+    end
 
-					start_paxel_cooldown(clicker, itemstack)
-					return itemstack
-				end
+    -- Active player-placed trap.
+    if active_trap and active_trap.team then
+        local opener_team = ctf_teams.get(clicker)
 
-				hud_events.new(clicker, {
-					quick = true,
-					text = "This is a trap chest!",
-					color = "warning",
-				})
+        -- Teammates cannot trigger the trap.
+        if opener_team == active_trap.team then
+            if is_support_paxel(itemstack) then
+                if not paxel_is_ready(itemstack) then
+                    return itemstack
+                end
 
-				return itemstack
-			end
+                remove_trapchest(pos)
+                minetest.add_item(pos, "ctf_trapchest:trapchest")
 
-			-- Enemies can disarm the trap with a ready Support Paxel.
-			if is_support_paxel(itemstack) and paxel_is_ready(itemstack) then
-				disarm_trapchest(pos, clicker)
-				start_paxel_cooldown(clicker, itemstack)
-				return itemstack
-			end
-		else
-			-- Map-generated traps have no owner or team.
-			-- Any player with a ready Support Paxel can disarm them.
-			if is_support_paxel(itemstack) and paxel_is_ready(itemstack) then
-				disarm_trapchest(pos, clicker)
-				start_paxel_cooldown(clicker, itemstack)
-				return itemstack
-			end
-		end
-		-- Anyone opening an armed trap without a usable Paxel triggers it.
-		local no_kill = false
+                start_paxel_cooldown(clicker, itemstack)
+                return itemstack
+            end
 
-		if trap and trap.player then
-			local placer = minetest.get_player_by_name(trap.player)
+            hud_events.new(clicker, {
+                quick = true,
+                text = "This is a trap chest!",
+                color = "warning",
+            })
 
-			if placer then
-				no_kill = ctf_teams.get(placer) == ctf_teams.get(clicker)
-			end
-		end
+            return itemstack
+        end
 
-		remove_trapchest(pos)
-		play_trapchest_explosion(pos)
-		damage_trap_opener(clicker, trap, no_kill)
+        -- Enemies can disarm the trap with a ready Support Paxel.
+        if is_support_paxel(itemstack) and paxel_is_ready(itemstack) then
+            disarm_trapchest(pos, clicker)
+            start_paxel_cooldown(clicker, itemstack)
+            return itemstack
+        end
+    else
+        -- Map-generated traps, including invalidated player-placed traps.
+        -- Any player with a ready Support Paxel can disarm them.
+        if is_support_paxel(itemstack) and paxel_is_ready(itemstack) then
+            disarm_trapchest(pos, clicker)
+            start_paxel_cooldown(clicker, itemstack)
+            return itemstack
+        end
+    end
 
-		return itemstack
-	end,
+    -- Anyone opening an armed trap without a usable Paxel triggers it.
+    remove_trapchest(pos)
+    play_trapchest_explosion(pos)
+    damage_trap_opener(clicker, active_trap, false)
+
+    return itemstack
+end,
+
 }
 
 

@@ -93,22 +93,32 @@ local function handle_hud_events(player, channel)
 	hud_queues[channel][pname].t = minetest.after(HUD_SHOW_TIME, function()
 		player = minetest.get_player_by_name(pname)
 
-		if player then
-			hud:change(player, event_name, {text = ""})
-
-			hud_queues[channel][pname].t = minetest.after(HUD_SHOW_NEXT_TIME, function()
-				player = minetest.get_player_by_name(pname)
-
-				if player then
-					if #hud_queues[channel][pname].e >= 1 then
-						handle_hud_events(player, channel)
-					else
-						hud:remove(player, event_name)
-						hud_queues[channel][pname] = nil
-					end
-				end
-			end)
+		if not player then
+			hud_queues[channel][pname] = nil
+			return
 		end
+
+		if hud:exists(player, event_name) then
+			hud:change(player, event_name, {text = ""})
+		end
+
+		hud_queues[channel][pname].t = minetest.after(HUD_SHOW_NEXT_TIME, function()
+			player = minetest.get_player_by_name(pname)
+
+			if not player or not hud_queues[channel][pname] then
+				hud_queues[channel][pname] = nil
+				return
+			end
+
+			if #hud_queues[channel][pname].e >= 1 then
+				handle_hud_events(player, channel)
+			else
+				if hud:exists(player, event_name) then
+					hud:remove(player, event_name)
+				end
+				hud_queues[channel][pname] = nil
+			end
+		end)
 	end)
 end
 
